@@ -24,29 +24,34 @@ type UserTestSuite struct {
 	R *gin.Engine
 }
 
-func SendRequest(engine *gin.Engine, method string, url string, payload interface{}, response interface{}) *httptest.ResponseRecorder {
+func SendRequest(engine *gin.Engine, method string, url string, payload interface{}, response interface{}, headers *map[string]string) *httptest.ResponseRecorder {
 	requestBody, _ := json.Marshal(payload)
-
 	req, _ := http.NewRequest(method, url, bytes.NewBuffer(requestBody))
+
+	if headers != nil {
+		for key, value := range *headers {
+			req.Header.Add(key, value)
+		}
+	}
 	writer := httptest.NewRecorder()
 	engine.ServeHTTP(writer, req)
-
-	json.Unmarshal(writer.Body.Bytes(), response)
-
+	json.Unmarshal(writer.Body.Bytes(), &response)
 	return writer
 }
 
 func (suite *UserTestSuite) SetupSuite() {
 	suite.R = SetupRouter()
 	suite.User = models.User{
-		UserName: "usertest",
-		Name:     "TEST",
-		Password: "123456789",
-		UserType: "janitor",
+		UserName:     "usertest",
+		Name:         "TEST",
+		Password:     "123456789",
+		UserIdentity: "CMND5347",
+		Birthday:     "20-11-2002",
+		UserType:     "janitor",
 	}
 
 	var response models.Response
-	SendRequest(suite.R, "POST", "/registry", suite.User, &response)
+	SendRequest(suite.R, "POST", "/registry", suite.User, &response, nil)
 
 	assert.Equal(suite.T(), 201, response.Status)
 	assert.Equal(suite.T(), "Success", response.Message)
@@ -56,7 +61,7 @@ func (suite *UserTestSuite) Test1_CreateDuplicateUser() {
 	suite.User.Name = "neyugN"
 
 	var response models.Response
-	SendRequest(suite.R, "POST", "/registry", suite.User, &response)
+	SendRequest(suite.R, "POST", "/registry", suite.User, &response, nil)
 
 	assert.Equal(suite.T(), 400, response.Status)
 	assert.Equal(suite.T(), "Duplicate username", response.Message)
@@ -66,7 +71,7 @@ func (suite *UserTestSuite) Test2_LoginWrongPassword() {
 	suite.User.Password = "123456781"
 
 	var response models.Response
-	SendRequest(suite.R, "POST", "/login", suite.User, &response)
+	SendRequest(suite.R, "POST", "/login", suite.User, &response, nil)
 
 	assert.Equal(suite.T(), 400, response.Status)
 	assert.Equal(suite.T(), "Wrong username or password", response.Message)
@@ -76,11 +81,34 @@ func (suite *UserTestSuite) Test3_LoginRightPassword() {
 	suite.User.Password = "123456789"
 
 	var response models.User
-	writer := SendRequest(suite.R, "POST", "/login", suite.User, &response)
-
+	writer := SendRequest(suite.R, "POST", "/login", suite.User, &response, nil)
 	suite.User = response
 
 	assert.Equal(suite.T(), 200, writer.Code)
+}
+
+func (suite *UserTestSuite) Test4_ViewContentProtected() {
+	header := map[string]string{
+		"token": suite.User.SignedToken,
+	}
+	writer := SendRequest(suite.R, "POST", "/", suite.User, "", &header)
+
+	assert.Equal(suite.T(), http.StatusOK, writer.Code)
+}
+
+func (suite *UserTestSuite) Test5_ViewContentWithNoToken() {
+	writer := SendRequest(suite.R, "POST", "/", suite.User, "", nil)
+
+	assert.Equal(suite.T(), http.StatusUnauthorized, writer.Code)
+}
+
+func (suite *UserTestSuite) Test6_ViewContentWithInvalidToken() {
+	header := map[string]string{
+		"token": suite.User.SignedToken + "1213",
+	}
+	writer := SendRequest(suite.R, "POST", "/", suite.User, "", &header)
+
+	assert.Equal(suite.T(), http.StatusInternalServerError, writer.Code)
 }
 
 func (suite *UserTestSuite) TearDownSuite() {

@@ -2,6 +2,7 @@ version: "3.8"
 
 services:
   backend:
+    container_name: go-backend
     build:
       context: ./backend
     ports:
@@ -15,6 +16,7 @@ services:
       - mongo-express
 
   mongo:
+    container_name: mongodb
     image: mongo
     restart: always
     container_name: mongo

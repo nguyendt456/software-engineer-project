@@ -9,6 +9,7 @@ import (
 	"github.com/nguyendt456/software-engineer-project/database"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type Auth struct {
@@ -63,7 +64,9 @@ func UpdateAuthToken(username string, signedToken string, refreshToken string) *
 		},
 	}
 
-	res := database.UserCollection.FindOneAndUpdate(ctx, filter, update)
+	var option = options.After
+
+	res := database.UserCollection.FindOneAndUpdate(ctx, filter, update, &options.FindOneAndUpdateOptions{ReturnDocument: &option})
 	return res
 }
 
@@ -72,5 +75,8 @@ func ValidateAuthToken(clientToken string) (valid bool, err error) {
 		func(t *jwt.Token) (interface{}, error) {
 			return []byte(SECRET), nil
 		})
+	if err != nil {
+		return false, err
+	}
 	return token.Valid, err
 }

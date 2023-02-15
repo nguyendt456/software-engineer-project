@@ -13,7 +13,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		clientToken := c.Request.Header.Get("token")
 
 		if clientToken == "" {
-			c.JSON(http.StatusInternalServerError, gin.H{
+			c.JSON(http.StatusUnauthorized, gin.H{
 				"error": "No authenticate token in headers",
 			})
 			c.Abort()
