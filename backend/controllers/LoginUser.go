@@ -67,7 +67,7 @@ func LoginUser() gin.HandlerFunc {
 			)
 			return
 		}
-		signedToken, refreshToken, _ := helpers.GenerateAuthToken(userToAuth.UserName, userToAuth.UserType)
+		signedToken, refreshToken, _ := helpers.GenerateAuthToken(userToAuth)
 
 		result := helpers.UpdateAuthToken(userToAuth.UserName, signedToken, refreshToken)
 		if result.Err() != nil {

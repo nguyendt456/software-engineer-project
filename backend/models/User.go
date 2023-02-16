@@ -1,6 +1,7 @@
 package models
 
 import (
+	"github.com/golang-jwt/jwt/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -14,4 +15,5 @@ type User struct {
 	UserType     string             `json:"usertype" validate:"eq=janitor|eq=collector|eq=backofficer"`
 	SignedToken  string             `json:"signedtoken"`
 	RefreshToken string             `json:"refreshtoken"`
+	jwt.RegisteredClaims
 }

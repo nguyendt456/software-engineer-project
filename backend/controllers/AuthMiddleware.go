@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -19,7 +20,8 @@ func AuthMiddleware() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		res, err := helpers.ValidateAuthToken(clientToken)
+		userSignedDetail, res, err := helpers.ValidateAuthToken(clientToken)
+		fmt.Println(userSignedDetail)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error": err.Error(),
@@ -34,6 +36,8 @@ func AuthMiddleware() gin.HandlerFunc {
 				"message": "Invalid Token",
 			})
 			c.Abort()
+			return
 		}
+
 	}
 }

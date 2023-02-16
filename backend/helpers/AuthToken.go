@@ -7,29 +7,30 @@ import (
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/nguyendt456/software-engineer-project/database"
+	"github.com/nguyendt456/software-engineer-project/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type Auth struct {
-	Username string
-	Usertype string
+	Name         string
+	Username     string
+	Usertype     string
+	UserIdentity string
+	Birthday     string
 	jwt.RegisteredClaims
 }
 
 var SECRET = "thisissecrett"
 
-func GenerateAuthToken(username string, usertype string) (string, string, error) {
-	var signedClaims = &Auth{
-		Username: username,
-		Usertype: usertype,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Local().Add(time.Hour * time.Duration(2))),
-		},
+func GenerateAuthToken(userToAuth models.User) (string, string, error) {
+	var signedClaims = userToAuth
+	signedClaims.RegisteredClaims = jwt.RegisteredClaims{
+		ExpiresAt: jwt.NewNumericDate(time.Now().Local().Add(time.Hour * time.Duration(2))),
 	}
 
-	var refreshClaims = &Auth{
+	var refreshClaims = models.User{
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Local().Add(time.Hour * time.Duration(24))),
 		},
@@ -70,13 +71,13 @@ func UpdateAuthToken(username string, signedToken string, refreshToken string) *
 	return res
 }
 
-func ValidateAuthToken(clientToken string) (valid bool, err error) {
-	token, err := jwt.ParseWithClaims(clientToken, &Auth{},
+func ValidateAuthToken(clientToken string) (userSignedDetail models.User, valid bool, err error) {
+	token, err := jwt.ParseWithClaims(clientToken, &userSignedDetail,
 		func(t *jwt.Token) (interface{}, error) {
 			return []byte(SECRET), nil
 		})
 	if err != nil {
-		return false, err
+		return models.User{}, false, err
 	}
-	return token.Valid, err
+	return userSignedDetail, token.Valid, err
 }
