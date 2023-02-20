@@ -38,6 +38,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-
+		c.Set("user", userSignedDetail)
+		return
 	}
 }

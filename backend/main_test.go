@@ -39,6 +39,14 @@ func SendRequest(engine *gin.Engine, method string, url string, payload interfac
 	return writer
 }
 
+func JsonPrettyPrint(T *testing.T, v any) {
+	var json_response, err = json.MarshalIndent(v, "", "	")
+	if err != nil {
+		T.Fatal("JSON marshal failed")
+	}
+	T.Logf("\n%s", json_response)
+}
+
 func (suite *UserTestSuite) SetupSuite() {
 	suite.R = SetupRouter()
 	suite.User = models.User{
@@ -47,11 +55,12 @@ func (suite *UserTestSuite) SetupSuite() {
 		Password:     "123456789",
 		UserIdentity: "CMND5347",
 		Birthday:     "20-11-2002",
-		UserType:     "janitor",
+		UserType:     "backofficer",
 	}
 
 	var response models.Response
 	SendRequest(suite.R, "POST", "/registry", suite.User, &response, nil)
+	JsonPrettyPrint(suite.T(), response)
 
 	assert.Equal(suite.T(), 201, response.Status)
 	assert.Equal(suite.T(), "Success", response.Message)
@@ -62,6 +71,7 @@ func (suite *UserTestSuite) Test1_CreateDuplicateUser() {
 
 	var response models.Response
 	SendRequest(suite.R, "POST", "/registry", suite.User, &response, nil)
+	JsonPrettyPrint(suite.T(), response)
 
 	assert.Equal(suite.T(), 400, response.Status)
 	assert.Equal(suite.T(), "Duplicate username", response.Message)
@@ -72,6 +82,7 @@ func (suite *UserTestSuite) Test2_LoginWrongPassword() {
 
 	var response models.Response
 	SendRequest(suite.R, "POST", "/login", suite.User, &response, nil)
+	JsonPrettyPrint(suite.T(), response)
 
 	assert.Equal(suite.T(), 400, response.Status)
 	assert.Equal(suite.T(), "Wrong username or password", response.Message)
@@ -83,6 +94,7 @@ func (suite *UserTestSuite) Test3_LoginRightPassword() {
 	var response models.User
 	writer := SendRequest(suite.R, "POST", "/login", suite.User, &response, nil)
 	suite.User = response
+	JsonPrettyPrint(suite.T(), response)
 
 	assert.Equal(suite.T(), 200, writer.Code)
 }
@@ -92,6 +104,7 @@ func (suite *UserTestSuite) Test4_ViewContentProtected() {
 		"token": suite.User.SignedToken,
 	}
 	writer := SendRequest(suite.R, "POST", "/", suite.User, "", &header)
+	JsonPrettyPrint(suite.T(), suite.User)
 
 	assert.Equal(suite.T(), http.StatusOK, writer.Code)
 }
