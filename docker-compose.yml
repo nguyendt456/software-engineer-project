@@ -1,0 +1,42 @@
+version: "3.8"
+
+services:
+  backend:
+    container_name: go-backend
+    build:
+      context: ./backend
+    ports:
+      - "8080:8080"
+    restart: always
+    depends_on:
+      - mongo
+      # - mongo-express
+    volumes:
+      - ./backend:/app
+
+  mongo:
+    container_name: mongodb
+    image: mongo
+    restart: always
+    container_name: mongo
+    logging:
+      driver: none
+    expose:
+      - "27017"
+    volumes:
+      - ./backend/db_volume:/db_volume
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: project231
+  
+  mongo-express:
+    image: mongo-express
+    restart: always
+    depends_on:
+      - mongo
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: ggwellplayed
+      ME_CONFIG_MONGODB_URL: mongodb://root:project231@mongo:27017/
