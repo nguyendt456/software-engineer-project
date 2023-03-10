@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package proto;
+
+import "database.proto";
+
+import "google/api/annotations.proto";
+
+option go_package = "github.com/nguyendt456/software-engineer-project/proto";
+
+service CreateUserService {
+    rpc CreateUser(User) returns (Response) {
+        option (google.api.http) = {
+            post: "/v1/registry"
+            body: "*"
+        };
+    }
+}

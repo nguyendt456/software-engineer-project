@@ -1,30 +1,69 @@
 version: "3.8"
 
 services:
-  backend:
-    container_name: go-backend
+  database:
+    container_name: database_service
     build:
       context: ./backend
-    ports:
-      - "8080:8080"
+      dockerfile: ./main/database/Dockerfile
+    network_mode: "host"
     restart: always
     depends_on:
       - mongo
-      # - mongo-express
+      - mongo-express
     volumes:
-      - ./backend:/app
+      - ./backend/src/database:/database/src/database
+      - ./backend/src/validator:/database/src/validator
+      - ./backend/main/database/:/database/main/database
+      - ./backend/main/common/:/database/main/common
+      - ./backend/main/certificate/server/:/database/main/certificate/server
+      - ./backend/pb/:/database/pb
+      - ./backend/main/certificate/CAs:/database/main/certificate/CAs
 
+  create_user:
+    container_name: create_user_service
+    build:
+      context: ./backend
+      dockerfile: ./main/create_user/Dockerfile
+    network_mode: "host"
+    restart: always
+    depends_on:
+      - database
+    volumes:
+      - ./backend/src/create_user:/create_user/src/create_user
+      - ./backend/src/validator:/create_user/src/validator
+      - ./backend/main/create_user/:/create_user/main/create_user
+      - ./backend/main/common/:/create_user/main/common
+      - ./backend/main/certificate/client/:/create_user/main/certificate/client
+      - ./backend/pb/:/create_user/pb
+      - ./backend/main/certificate/CAs:/create_user/main/certificate/CAs
+
+  login_user:
+    container_name: login_user_service
+    build:
+      context: ./backend
+      dockerfile: ./main/login_user/Dockerfile
+    network_mode: "host"
+    restart: always
+    depends_on:
+      - database
+    volumes:
+      - ./backend/src/login_user:/login_user/src/login_user
+      - ./backend/src/validator:/login_user/src/validator
+      - ./backend/main/login_user/:/login_user/main/login_user
+      - ./backend/main/common/:/login_user/main/common
+      - ./backend/main/certificate/client/:/login_user/main/certificate/client
+      - ./backend/pb/:/login_user/pb
+      - ./backend/main/certificate/CAs:/login_user/main/certificate/CAs
+ 
   mongo:
     container_name: mongodb
     image: mongo
     restart: always
     container_name: mongo
-    logging:
-      driver: none
+    network_mode: "host"
     expose:
       - "27017"
-    volumes:
-      - ./backend/db_volume:/db_volume
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: project231
@@ -34,9 +73,10 @@ services:
     restart: always
     depends_on:
       - mongo
+    network_mode: "host"
     ports:
       - "8081:8081"
     environment:
       ME_CONFIG_BASICAUTH_USERNAME: admin
       ME_CONFIG_BASICAUTH_PASSWORD: ggwellplayed
-      ME_CONFIG_MONGODB_URL: mongodb://root:project231@mongo:27017/
+      ME_CONFIG_MONGODB_URL: mongodb://root:project231@0.0.0.0:27017/
