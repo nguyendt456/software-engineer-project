@@ -4,7 +4,7 @@ Simple backend implementation including create user, login and authenticate user
 
 ### System design
 
-![image info](resources/system_design.png)
+![image info](resources/system_design.svg)
 
 ### Tech specs
 
