@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package proto;
+
+import "database.proto";
+import "login_user.proto";
+
+option go_package = "github.com/nguyendt456/software-engineer-project/proto";
+
+service RedisService {
+    rpc SetUUID(UserID) returns (Response);
+    rpc RemoveUUID(UserID) returns (Response);
+    rpc CheckExistedUserSession(UserID) returns (LoginResponse);
+}
+
+message UserID {
+    string key = 1;
+    repeated string value = 2;
+}

@@ -2,6 +2,7 @@ package login_user
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/nguyendt456/software-engineer-project/main/common"
 	"google.golang.org/grpc"
@@ -27,7 +28,7 @@ func JWTAuthInterceptor(ctx context.Context, req interface{}, info *grpc.UnarySe
 	}
 	AuthInfo, valid, err := common.ValidateToken(token[0])
 	if !valid {
-		return nil, status.Errorf(codes.Unauthenticated, "Invalid token")
+		fmt.Println("invalid token")
 	}
 	ctx = context.WithValue(ctx, "User", AuthInfo)
 

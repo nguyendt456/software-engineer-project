@@ -2,14 +2,12 @@ syntax = "proto3";
 
 package proto;
 
-import "database.proto";
-
 import "google/api/annotations.proto";
 
 option go_package = "github.com/nguyendt456/software-engineer-project/proto";
 
 service LoginUserService {
-    rpc LoginUser(LoginForm) returns (Response) {
+    rpc LoginUser(LoginForm) returns (LoginResponse) {
         option (google.api.http) = {
             post: "/v1/login"
             body: "*"
@@ -20,4 +18,10 @@ service LoginUserService {
 message LoginForm {
     string username = 1;
     string password = 2;
+}
+
+message LoginResponse {
+    int32 status_code = 1;
+    string token = 2;
+    string refresh_token = 3;
 }

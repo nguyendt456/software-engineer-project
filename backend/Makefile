@@ -1,4 +1,4 @@
-.PHONY: proto server client ca
+.PHONY: proto server client redis ca
 
 certificate_path = main/certificate
 
@@ -14,6 +14,10 @@ server:
 client:
 	openssl req -new -nodes -newkey rsa:4096 -keyout ${certificate_path}/client/client.key -out ${certificate_path}/client/client.csr -subj "/C=VN/L=Ho Chi Minh/CN=localhost.local"
 	openssl x509 -req -in ${certificate_path}/client/client.csr -CA ${certificate_path}/CAs/ca-cert.pem -CAkey ${certificate_path}/CAs/ca-key.pem -CAcreateserial -out ${certificate_path}/client/client.cert -extfile ${certificate_path}/client/client-ext.cnf
+
+redis:
+	openssl req -new -nodes -newkey rsa:4096 -keyout ${certificate_path}/database/redis/redis.key -out ${certificate_path}/database/redis/redis.csr -subj "/C=VN/L=Ho Chi Minh/CN=localhost.local"
+	openssl x509 -req -in ${certificate_path}/database/redis/redis.csr -CA ${certificate_path}/CAs/ca-cert.pem -CAkey ${certificate_path}/CAs/ca-key.pem -CAcreateserial -out ${certificate_path}/database/redis/redis.cert -extfile ${certificate_path}/database/redis/redis.cnf
 
 ca:
 	openssl req -nodes -x509 -newkey rsa:4096 -keyout ${certificate_path}/CAs/ca-key.pem -out ${certificate_path}/CAs/ca-cert.pem -subj "/C=VN/CN=makerzone.net/emailAddress=nguyendt456@gmail.com"

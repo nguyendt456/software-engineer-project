@@ -6,12 +6,12 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/nguyendt456/software-engineer-project/src/setup_env"
 	"golang.org/x/crypto/bcrypt"
 )
 
 const (
-	secretKey     = "testing"
-	tokenDuration = time.Hour * 2
+	secretKey = "testing"
 )
 
 func HashPassword(password string) string {
@@ -52,7 +52,7 @@ func ValidateToken(client_token string) (userSignedDetail AuthClaims, valid bool
 func GenerateAuthToken(userToAuth AuthClaims) (string, string, error) {
 	var signedClaims = userToAuth
 	signedClaims.RegisteredClaims = jwt.RegisteredClaims{
-		ExpiresAt: jwt.NewNumericDate(time.Now().Local().Add(time.Hour * time.Duration(2))),
+		ExpiresAt: jwt.NewNumericDate(time.Now().Local().Add(setup_env.TokenDuration)),
 	}
 
 	signedToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, signedClaims).SignedString([]byte(secretKey))
@@ -62,7 +62,7 @@ func GenerateAuthToken(userToAuth AuthClaims) (string, string, error) {
 	}
 
 	signedClaims.RegisteredClaims = jwt.RegisteredClaims{
-		ExpiresAt: jwt.NewNumericDate(time.Now().Local().Add(time.Hour * time.Duration(24))),
+		ExpiresAt: jwt.NewNumericDate(time.Now().Local().Add(setup_env.RefreshTokenDuration)),
 	}
 
 	refreshToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, signedClaims).SignedString([]byte(secretKey))

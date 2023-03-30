@@ -21,7 +21,6 @@ const _ = grpc.SupportPackageIsVersion7
 const (
 	Database_InsertUser_FullMethodName        = "/proto.Database/InsertUser"
 	Database_GetUserByUsername_FullMethodName = "/proto.Database/GetUserByUsername"
-	Database_UpdateUserToken_FullMethodName   = "/proto.Database/UpdateUserToken"
 )
 
 // DatabaseClient is the client API for Database service.
@@ -30,7 +29,6 @@ const (
 type DatabaseClient interface {
 	InsertUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*Response, error)
 	GetUserByUsername(ctx context.Context, in *Username, opts ...grpc.CallOption) (*User, error)
-	UpdateUserToken(ctx context.Context, in *UserToken, opts ...grpc.CallOption) (*Response, error)
 }
 
 type databaseClient struct {
@@ -59,22 +57,12 @@ func (c *databaseClient) GetUserByUsername(ctx context.Context, in *Username, op
 	return out, nil
 }
 
-func (c *databaseClient) UpdateUserToken(ctx context.Context, in *UserToken, opts ...grpc.CallOption) (*Response, error) {
-	out := new(Response)
-	err := c.cc.Invoke(ctx, Database_UpdateUserToken_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // DatabaseServer is the server API for Database service.
 // All implementations must embed UnimplementedDatabaseServer
 // for forward compatibility
 type DatabaseServer interface {
 	InsertUser(context.Context, *User) (*Response, error)
 	GetUserByUsername(context.Context, *Username) (*User, error)
-	UpdateUserToken(context.Context, *UserToken) (*Response, error)
 	mustEmbedUnimplementedDatabaseServer()
 }
 
@@ -87,9 +75,6 @@ func (UnimplementedDatabaseServer) InsertUser(context.Context, *User) (*Response
 }
 func (UnimplementedDatabaseServer) GetUserByUsername(context.Context, *Username) (*User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserByUsername not implemented")
-}
-func (UnimplementedDatabaseServer) UpdateUserToken(context.Context, *UserToken) (*Response, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateUserToken not implemented")
 }
 func (UnimplementedDatabaseServer) mustEmbedUnimplementedDatabaseServer() {}
 
@@ -140,24 +125,6 @@ func _Database_GetUserByUsername_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Database_UpdateUserToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UserToken)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DatabaseServer).UpdateUserToken(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Database_UpdateUserToken_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DatabaseServer).UpdateUserToken(ctx, req.(*UserToken))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // Database_ServiceDesc is the grpc.ServiceDesc for Database service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -172,10 +139,6 @@ var Database_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetUserByUsername",
 			Handler:    _Database_GetUserByUsername_Handler,
-		},
-		{
-			MethodName: "UpdateUserToken",
-			Handler:    _Database_UpdateUserToken_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

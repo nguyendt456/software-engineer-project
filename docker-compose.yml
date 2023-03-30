@@ -3,6 +3,7 @@ version: "3.8"
 services:
   database:
     container_name: database_service
+    user: root
     build:
       context: ./backend
       dockerfile: ./main/database/Dockerfile
@@ -10,9 +11,9 @@ services:
     restart: always
     depends_on:
       - mongo
-      - mongo-express
     volumes:
       - ./backend/src/database:/database/src/database
+      - ./backend/src/setup_env:/database/src/setup_env
       - ./backend/src/validator:/database/src/validator
       - ./backend/main/database/:/database/main/database
       - ./backend/main/common/:/database/main/common
@@ -31,6 +32,7 @@ services:
       - database
     volumes:
       - ./backend/src/create_user:/create_user/src/create_user
+      - ./backend/src/setup_env:/create_user/src/setup_env
       - ./backend/src/validator:/create_user/src/validator
       - ./backend/main/create_user/:/create_user/main/create_user
       - ./backend/main/common/:/create_user/main/common
@@ -49,12 +51,31 @@ services:
       - database
     volumes:
       - ./backend/src/login_user:/login_user/src/login_user
+      - ./backend/src/setup_env:/login_user/src/setup_env
       - ./backend/src/validator:/login_user/src/validator
       - ./backend/main/login_user/:/login_user/main/login_user
       - ./backend/main/common/:/login_user/main/common
       - ./backend/main/certificate/client/:/login_user/main/certificate/client
       - ./backend/pb/:/login_user/pb
       - ./backend/main/certificate/CAs:/login_user/main/certificate/CAs
+
+  redis_service:
+    container_name: redis_service_container
+    build:
+      context: ./backend
+      dockerfile: ./main/redis_service/Dockerfile
+    network_mode: "host"
+    restart: always
+    depends_on:
+      - database
+    volumes:
+      - ./backend/src/redis_service:/redis/src/redis_service
+      - ./backend/src/setup_env:/redis/src/setup_env
+      - ./backend/main/redis_service/:/redis/main/redis_service
+      - ./backend/main/common/:/redis/main/common
+      - ./backend/main/certificate/server/:/redis/main/certificate/server
+      - ./backend/pb/:/redis/pb
+      - ./backend/main/certificate/CAs:/redis/main/certificate/CAs
  
   mongo:
     container_name: mongodb
@@ -68,15 +89,24 @@ services:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: project231
   
-  mongo-express:
-    image: mongo-express
+  redis:
+    container_name: redisdb
+    image: bitnami/redis:7.0
+    user: "root:1000"
     restart: always
-    depends_on:
-      - mongo
-    network_mode: "host"
-    ports:
-      - "8081:8081"
     environment:
-      ME_CONFIG_BASICAUTH_USERNAME: admin
-      ME_CONFIG_BASICAUTH_PASSWORD: ggwellplayed
-      ME_CONFIG_MONGODB_URL: mongodb://root:project231@0.0.0.0:27017/
+      - ALLOW_EMPTY_PASSWORD=true
+      - REDIS_TLS_CERT_FILE=/redis_tls/redis.cert
+      - REDIS_TLS_KEY_FILE=/redis_tls/redis.key
+      - REDIS_TLS_CA_FILE=/redis_tls/ca-cert.pem
+      - REDIS_TLS_ENABLED=yes
+      - REDIS_TLS_PORT=6379
+    network_mode: "host"
+    volumes:
+      - 'redis_data:/redis_volume'
+      - ./backend/main/certificate/database/redis:/redis_tls
+      - ./backend/main/certificate/CAs/ca-cert.pem:/redis_tls/ca-cert.pem
+  
+volumes:
+  redis_data:
+    driver: local

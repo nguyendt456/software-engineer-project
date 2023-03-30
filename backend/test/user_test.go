@@ -3,39 +3,16 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"testing"
 
 	pb "github.com/nguyendt456/software-engineer-project/pb"
 	"github.com/nguyendt456/software-engineer-project/src/setup_env"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
 )
-
-// func TestGrpcCreateUser(t *testing.T) {
-// 	grpc_conn, err := grpc.Dial("0.0.0.0"+":8088", grpc.WithTransportCredentials(insecure.NewCredentials()))
-// 	if err != nil {
-// 		t.Fatal(err.Error())
-// 		return
-// 	}
-// 	defer grpc_conn.Close()
-
-// 	client := pb.NewCreateUserServiceClient(grpc_conn)
-
-// 	response, err := client.CreateUser(context.Background(), &pb.User{
-// 		Username: "nguyendt456",
-// 		Password: "123456789",
-// 		Usertype: "backofficer",
-// 	})
-
-// 	if err != nil {
-// 		t.Fatal(err.Error())
-// 		return
-// 	}
-// 	assert.Equal(t, 201, int(response.StatusCode))
-// 	assert.Equal(t, "User Created", response.Message)
-// }
 
 func SendHttpRequest(url string, payload interface{}, headers *map[string]string) *http.Response {
 	request_body, err := json.Marshal(payload)
@@ -54,11 +31,14 @@ func SendHttpRequest(url string, payload interface{}, headers *map[string]string
 		}
 	}
 	res, _ := http.DefaultClient.Do(req)
-
 	return res
 }
 
-func TestRESTapiCreateUser(t *testing.T) {
+type UserTestSuite struct {
+	suite.Suite
+}
+
+func (suite *UserTestSuite) Test1_TestRESTapiCreateUser() {
 	var user = &pb.User{
 		Username: "nguyendt456",
 		Password: "123456789",
@@ -67,7 +47,24 @@ func TestRESTapiCreateUser(t *testing.T) {
 	response := &pb.Response{}
 
 	res := SendHttpRequest("http://"+setup_env.Create_user_gw+"/v1/registry", user, nil)
-	body, _ := ioutil.ReadAll(res.Body)
+	body, _ := io.ReadAll(res.Body)
 	json.Unmarshal(body, &response)
-	fmt.Print(response)
+	log.Println(response)
+	assert.Equal(suite.T(), 202, response.StatusCode)
+}
+func (suite *UserTestSuite) Test2_RESTapiLoginUser() {
+	var user = &pb.LoginForm{
+		Username: "nguyendt456",
+		Password: "123456789",
+	}
+	response := &pb.LoginResponse{}
+
+	res := SendHttpRequest("http://"+setup_env.Login_user_gw+"/v1/login", user, nil)
+	body, _ := io.ReadAll(res.Body)
+	json.Unmarshal(body, &response)
+
+}
+
+func TestMain(t *testing.T) {
+	suite.Run(t, new(UserTestSuite))
 }

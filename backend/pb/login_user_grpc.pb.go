@@ -26,7 +26,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type LoginUserServiceClient interface {
-	LoginUser(ctx context.Context, in *LoginForm, opts ...grpc.CallOption) (*Response, error)
+	LoginUser(ctx context.Context, in *LoginForm, opts ...grpc.CallOption) (*LoginResponse, error)
 }
 
 type loginUserServiceClient struct {
@@ -37,8 +37,8 @@ func NewLoginUserServiceClient(cc grpc.ClientConnInterface) LoginUserServiceClie
 	return &loginUserServiceClient{cc}
 }
 
-func (c *loginUserServiceClient) LoginUser(ctx context.Context, in *LoginForm, opts ...grpc.CallOption) (*Response, error) {
-	out := new(Response)
+func (c *loginUserServiceClient) LoginUser(ctx context.Context, in *LoginForm, opts ...grpc.CallOption) (*LoginResponse, error) {
+	out := new(LoginResponse)
 	err := c.cc.Invoke(ctx, LoginUserService_LoginUser_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -50,7 +50,7 @@ func (c *loginUserServiceClient) LoginUser(ctx context.Context, in *LoginForm, o
 // All implementations must embed UnimplementedLoginUserServiceServer
 // for forward compatibility
 type LoginUserServiceServer interface {
-	LoginUser(context.Context, *LoginForm) (*Response, error)
+	LoginUser(context.Context, *LoginForm) (*LoginResponse, error)
 	mustEmbedUnimplementedLoginUserServiceServer()
 }
 
@@ -58,7 +58,7 @@ type LoginUserServiceServer interface {
 type UnimplementedLoginUserServiceServer struct {
 }
 
-func (UnimplementedLoginUserServiceServer) LoginUser(context.Context, *LoginForm) (*Response, error) {
+func (UnimplementedLoginUserServiceServer) LoginUser(context.Context, *LoginForm) (*LoginResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LoginUser not implemented")
 }
 func (UnimplementedLoginUserServiceServer) mustEmbedUnimplementedLoginUserServiceServer() {}

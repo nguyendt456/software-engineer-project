@@ -7,7 +7,6 @@ option go_package = "github.com/nguyendt456/software-engineer-project/proto";
 service Database {
     rpc InsertUser(User) returns (Response);
     rpc GetUserByUsername(Username) returns (User);
-    rpc UpdateUserToken(UserToken) returns (Response);
 }
 
 message Username {
@@ -19,12 +18,6 @@ message User {
     string password = 2;
     string name = 3;
     string usertype = 4;
-}
-
-message UserToken {
-    string username = 1;
-    string token = 2;
-    string refresh_token = 3;
 }
 
 message Response {

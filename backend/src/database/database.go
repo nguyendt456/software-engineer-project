@@ -57,8 +57,8 @@ func (service *DatabaseService) InsertUser(client_ctx context.Context, client_us
 	if find_result == nil {
 		return &pb.Response{
 			StatusCode: int32(http.StatusInternalServerError),
-			Message:    "Duplicate username",
-		}, errors.New("Duplicate username")
+			Message:    "Username already taken",
+		}, errors.New("Username already taken")
 	}
 
 	result, err := Collection.InsertOne(client_ctx, client_user)
@@ -73,35 +73,6 @@ func (service *DatabaseService) InsertUser(client_ctx context.Context, client_us
 	return &pb.Response{
 		StatusCode: int32(http.StatusCreated),
 		Message:    "User Created",
-	}, nil
-}
-
-func (service *DatabaseService) UpdateUserToken(ctx context.Context, user_token *pb.UserToken) (*pb.Response, error) {
-	var filter = bson.M{
-		"username": user_token.Username,
-	}
-
-	var update = bson.M{
-		"$set": bson.M{
-			"signedtoken":  user_token.Token,
-			"refreshtoken": user_token.RefreshToken,
-		},
-	}
-
-	var option = options.After
-	res := Collection.FindOneAndUpdate(ctx, filter, update, &options.FindOneAndUpdateOptions{ReturnDocument: &option})
-
-	if res.Err() != nil {
-		return &pb.Response{
-			StatusCode: int32(http.StatusInternalServerError),
-			Message:    "",
-		}, res.Err()
-	}
-	var response = pb.UserToken{}
-	res.Decode(&response)
-	return &pb.Response{
-		StatusCode: int32(http.StatusAccepted),
-		Message:    response.Token,
 	}, nil
 }
 

@@ -9,12 +9,9 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	pb "github.com/nguyendt456/software-engineer-project/pb"
 	"github.com/nguyendt456/software-engineer-project/src/login_user"
+	"github.com/nguyendt456/software-engineer-project/src/setup_env"
 	"google.golang.org/grpc"
-)
-
-const (
-	Login_user_port    = ":8084"
-	Login_user_gw_port = ":8085"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 func CustomMatcher(key string) (string, bool) {
@@ -28,12 +25,20 @@ func CustomMatcher(key string) (string, bool) {
 
 func startLoginUserGateway() {
 	grpc_mux := runtime.NewServeMux(
+		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
+			MarshalOptions: protojson.MarshalOptions{
+				UseProtoNames: true,
+			},
+			UnmarshalOptions: protojson.UnmarshalOptions{
+				DiscardUnknown: true,
+			},
+		}),
 		runtime.WithIncomingHeaderMatcher(CustomMatcher),
 	)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	err := pb.RegisterLoginUserServiceHandlerFromEndpoint(ctx, grpc_mux, "0.0.0.0"+Login_user_port, []grpc.DialOption{grpc.WithInsecure()})
+	err := pb.RegisterLoginUserServiceHandlerFromEndpoint(ctx, grpc_mux, setup_env.Login_user_addr, []grpc.DialOption{grpc.WithInsecure()})
 	if err != nil {
 		log.Fatal("cannot register handler server")
 	}
@@ -42,7 +47,7 @@ func startLoginUserGateway() {
 
 	http_mux.Handle("/", grpc_mux)
 
-	lis, err := net.Listen("tcp", Login_user_gw_port)
+	lis, err := net.Listen("tcp", setup_env.Login_user_gw)
 	if err != nil {
 		log.Fatal("failed to listen on tcp port:", err.Error())
 	}
@@ -61,7 +66,7 @@ func main() {
 
 	go startLoginUserGateway()
 
-	lis, err := net.Listen("tcp", Login_user_port)
+	lis, err := net.Listen("tcp", setup_env.Login_user_addr)
 	if err != nil {
 		log.Fatal(err.Error())
 		return
